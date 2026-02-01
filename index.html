@@ -1,122 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>My Life Calendar</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8" />
+<title>My Life Calendar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-50 min-h-screen p-6">
-  <div class="max-w-5xl mx-auto">
-    <h1 class="text-2xl font-semibold mb-2">My Life Calendar</h1>
-    <p class="text-gray-600 mb-6">Your data stays in your browser (localStorage). Nothing is uploaded.</p>
+<div class="max-w-5xl mx-auto">
 
-    <div class="bg-white rounded-2xl shadow p-4 mb-6 flex flex-wrap items-end gap-4">
-      <div>
-        <label class="block text-sm text-gray-600">Birth date</label>
-        <input id="birthDate" type="date" class="border rounded px-3 py-2" />
-      </div>
-      <div>
-        <label class="block text-sm text-gray-600">Life expectancy (years)</label>
-        <input id="lifeYears" type="number" value="90" class="border rounded px-3 py-2 w-24" />
-      </div>
-      <button id="generate" class="bg-black text-white rounded-xl px-4 py-2">Generate</button>
-      <button id="clearNotes" class="border rounded-xl px-4 py-2">Clear Notes</button>
-    </div>
+<h1 class="text-2xl font-semibold mb-4">My Life Calendar</h1>
 
-    <div id="stats" class="mb-4 text-sm text-gray-700"></div>
+<div class="flex gap-2 mb-4">
+<button id="lifeTab" class="px-4 py-2 rounded bg-black text-white">Life</button>
+<button id="yearTab" class="px-4 py-2 rounded border">Year</button>
+</div>
 
-    <div class="overflow-x-auto">
-      <div id="grid" class="grid gap-1" style="grid-template-columns: repeat(52, minmax(10px, 1fr));"></div>
-    </div>
+<!-- Controls -->
+<div class="bg-white rounded-xl shadow p-4 mb-4 flex flex-wrap gap-4">
+<div>
+<label class="block text-sm">Birth date</label>
+<input id="birthDate" type="date" class="border rounded px-3 py-2"/>
+</div>
 
-    <div class="mt-6 bg-white rounded-2xl shadow p-4">
-      <h2 class="font-medium mb-2">How to use</h2>
-      <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
-        <li>Set your birth date and click Generate.</li>
-        <li>Each square = 1 week.</li>
-        <li>Dark squares = weeks already lived.</li>
-        <li>Click any square to add a note (stored locally).</li>
-      </ul>
-    </div>
-  </div>
+<div>
+<label class="block text-sm">Life years</label>
+<input id="lifeYears" type="number" value="90" class="border rounded px-3 py-2 w-24"/>
+</div>
+
+<button id="generate" class="bg-black text-white rounded px-4">Generate</button>
+</div>
+
+<div id="lifeView"></div>
+<div id="yearView" class="hidden"></div>
+
+</div>
 
 <script>
-const gridEl = document.getElementById('grid');
-const birthInput = document.getElementById('birthDate');
-const yearsInput = document.getElementById('lifeYears');
-const statsEl = document.getElementById('stats');
+const lifeView=document.getElementById("lifeView");
+const yearView=document.getElementById("yearView");
 
-// Load saved settings
-birthInput.value = localStorage.getItem('birthDate') || '';
-yearsInput.value = localStorage.getItem('lifeYears') || 90;
+const birthInput=document.getElementById("birthDate");
+const yearsInput=document.getElementById("lifeYears");
 
-function weeksBetween(a, b) {
-  return Math.floor((b - a) / (1000 * 60 * 60 * 24 * 7));
+birthInput.value=localStorage.getItem("birthDate")||"";
+yearsInput.value=localStorage.getItem("lifeYears")||90;
+
+function weeksBetween(a,b){
+ return Math.floor((b-a)/(1000*60*60*24*7));
 }
 
-function render() {
-  const birthVal = birthInput.value;
-  if (!birthVal) return;
+function renderLife(){
+ if(!birthInput.value)return;
 
-  localStorage.setItem('birthDate', birthVal);
-  localStorage.setItem('lifeYears', yearsInput.value);
+ localStorage.setItem("birthDate",birthInput.value);
+ localStorage.setItem("lifeYears",yearsInput.value);
 
-  const birth = new Date(birthVal);
-  const now = new Date();
-  const lifeYears = parseInt(yearsInput.value || 90);
+ const birth=new Date(birthInput.value);
+ const now=new Date();
+ const weeksLived=weeksBetween(birth,now);
+ const totalWeeks=yearsInput.value*52;
 
-  const weeksLived = Math.max(0, weeksBetween(birth, now));
-  const totalWeeks = lifeYears * 52;
+ lifeView.innerHTML=`<div class='mb-2'>Weeks lived: ${weeksLived}/${totalWeeks}</div>
+ <div class='grid gap-1' style='grid-template-columns:repeat(52,1fr)'></div>`;
 
-  statsEl.innerHTML = `Weeks lived: <b>${weeksLived}</b> / ${totalWeeks} (${((weeksLived/totalWeeks)*100).toFixed(1)}%)`;
+ const grid=lifeView.querySelector(".grid");
 
-  gridEl.innerHTML = '';
+ for(let i=0;i<totalWeeks;i++){
+  const d=document.createElement("div");
+  d.className="aspect-square rounded border cursor-pointer";
+  d.classList.add(i<weeksLived?"bg-gray-800":"bg-gray-200");
 
-  for (let i = 0; i < totalWeeks; i++) {
-    const div = document.createElement('div');
-    div.className = 'aspect-square rounded cursor-pointer border';
+  const key="week_"+i;
+  if(localStorage.getItem(key)) d.classList.add("ring-2","ring-blue-400");
 
-    const noteKey = `note_${i}`;
-    const hasNote = !!localStorage.getItem(noteKey);
-
-    if (i < weeksLived) {
-      div.classList.add('bg-gray-800');
-    } else {
-      div.classList.add('bg-gray-200');
-    }
-
-    if (hasNote) {
-      div.classList.add('ring-2', 'ring-blue-400');
-    }
-
-    div.title = `Week ${i+1}`;
-
-    div.onclick = () => {
-      const current = localStorage.getItem(noteKey) || '';
-      const text = prompt(`Note for week ${i+1}:`, current);
-      if (text === null) return;
-      if (text.trim() === '') {
-        localStorage.removeItem(noteKey);
-      } else {
-        localStorage.setItem(noteKey, text);
-      }
-      render();
-    };
-
-    gridEl.appendChild(div);
-  }
+  d.onclick=()=>{
+   const t=prompt("Note:",localStorage.getItem(key)||"");
+   if(t===null)return;
+   if(t==="")localStorage.removeItem(key); else localStorage.setItem(key,t);
+   renderLife();
+  };
+  grid.appendChild(d);
+ }
 }
 
-render();
+function renderYear(){
+ const now=new Date();
+ const year=now.getFullYear();
+ const start=new Date(year,0,1);
 
-document.getElementById('generate').onclick = render;
+ yearView.innerHTML=`<div class='mb-2'>${year}</div>
+ <div class='grid gap-1' style='grid-template-columns:repeat(31,1fr)'></div>`;
 
-document.getElementById('clearNotes').onclick = () => {
-  if (!confirm('Remove all notes?')) return;
-  Object.keys(localStorage).forEach(k => { if (k.startsWith('note_')) localStorage.removeItem(k); });
-  render();
+ const grid=yearView.querySelector(".grid");
+
+ for(let i=0;i<365;i++){
+  const d=new Date(start);
+  d.setDate(start.getDate()+i);
+  if(d.getFullYear()!=year)continue;
+
+  const key="day_"+d.toISOString().slice(0,10);
+
+  const box=document.createElement("div");
+  box.className="aspect-square rounded border cursor-pointer bg-gray-200 text-[8px] flex items-center justify-center";
+  box.innerText=d.getDate();
+
+  if(localStorage.getItem(key)) box.classList.add("ring-2","ring-green-400");
+
+  box.onclick=()=>{
+   const t=prompt(d.toDateString(),localStorage.getItem(key)||"");
+   if(t===null)return;
+   if(t==="")localStorage.removeItem(key); else localStorage.setItem(key,t);
+   renderYear();
+  };
+
+  grid.appendChild(box);
+ }
+}
+
+document.getElementById("generate").onclick=()=>{
+ renderLife();
+ renderYear();
 };
+
+document.getElementById("lifeTab").onclick=()=>{
+ lifeView.classList.remove("hidden");
+ yearView.classList.add("hidden");
+};
+
+document.getElementById("yearTab").onclick=()=>{
+ yearView.classList.remove("hidden");
+ lifeView.classList.add("hidden");
+};
+
+renderLife();
+renderYear();
 </script>
 </body>
 </html>
