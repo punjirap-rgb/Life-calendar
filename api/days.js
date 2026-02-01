@@ -1,8 +1,8 @@
 export default function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
 
-  const W = 1179;
-  const H = 2556;
+  const W = 1170;
+  const H = 2532;
 
 
   const DAYS = 365;
@@ -35,14 +35,14 @@ export default function handler(req, res) {
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=1179, height=2556, initial-scale=1">
+<meta name="viewport" content="width=1170, height=2532, initial-scale=1">
 
 <style>
 body{
 margin:0;
 background:#EAEFEF;
-width:1179px;
-height:2556px;
+width:1170px;
+height:2532;
 display:flex;
 justify-content:center;
 align-items:center;
