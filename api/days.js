@@ -1,8 +1,9 @@
 export default function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
 
-  const W = Number(req.query.width || 1179);
-  const H = Number(req.query.height || 2556);
+  const W = 1179;
+  const H = 2556;
+
 
   const DAYS = 365;
   const COLS = 20;
@@ -34,18 +35,21 @@ export default function handler(req, res) {
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=1179, height=2556, initial-scale=1">
 
 <style>
 body{
 margin:0;
 background:#EAEFEF;
+width:1179px;
+height:2556px;
 display:flex;
 justify-content:center;
 align-items:center;
-height:${H}px;
 font-family:-apple-system;
+overflow:hidden;
 }
+
 
 .wrapper{
 display:flex;
