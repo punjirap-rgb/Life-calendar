@@ -1,141 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>My Life Calendar</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<title>Life & Year Calendar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<body class="bg-gray-50 p-4">
 
-<body class="bg-gray-50 min-h-screen p-6">
-<div class="max-w-5xl mx-auto">
+<div class="max-w-4xl mx-auto text-center space-y-4">
 
-<h1 class="text-2xl font-semibold mb-4">My Life Calendar</h1>
+  <h1 class="text-3xl font-bold">Life & Year Calendar</h1>
 
-<div class="flex gap-2 mb-4">
-<button id="lifeTab" class="px-4 py-2 rounded bg-black text-white">Life</button>
-<button id="yearTab" class="px-4 py-2 rounded border">Year</button>
-</div>
+  <!-- Tab Buttons -->
+  <div class="flex justify-center gap-2">
+    <button id="lifeBtn" class="px-4 py-2 bg-black text-white rounded">Life</button>
+    <button id="yearBtn" class="px-4 py-2 border rounded">Year</button>
+  </div>
 
-<!-- Controls -->
-<div class="bg-white rounded-xl shadow p-4 mb-4 flex flex-wrap gap-4">
-<div>
-<label class="block text-sm">Birth date</label>
-<input id="birthDate" type="date" class="border rounded px-3 py-2"/>
-</div>
+  <!-- Inputs -->
+  <div class="flex justify-center gap-4">
+    <div>
+      <label class="block text-sm">Birth Date</label>
+      <input id="birthDate" type="date" class="border rounded px-3 py-2">
+    </div>
+    <div>
+      <label class="block text-sm">Life Expectancy (years)</label>
+      <input id="lifeYears" type="number" value="90" class="border rounded px-3 py-2 w-24">
+    </div>
+    <button id="generate" class="bg-blue-600 text-white px-4 py-2 rounded">Generate</button>
+  </div>
 
-<div>
-<label class="block text-sm">Life years</label>
-<input id="lifeYears" type="number" value="90" class="border rounded px-3 py-2 w-24"/>
-</div>
-
-<button id="generate" class="bg-black text-white rounded px-4">Generate</button>
-</div>
-
-<div id="lifeView"></div>
-<div id="yearView" class="hidden"></div>
+  <!-- Container for Views -->
+  <div id="lifeView" class="">
+    <!-- Life content goes here -->
+  </div>
+  <div id="yearView" class="hidden">
+    <!-- Year content goes here -->
+  </div>
 
 </div>
 
 <script>
-const lifeView=document.getElementById("lifeView");
-const yearView=document.getElementById("yearView");
 
-const birthInput=document.getElementById("birthDate");
-const yearsInput=document.getElementById("lifeYears");
+// READ saved birth & life years
+const birthInput = document.getElementById("birthDate");
+const lifeYearsInput = document.getElementById("lifeYears");
+birthInput.value = localStorage.getItem("birthDate") || "";
+lifeYearsInput.value = localStorage.getItem("lifeYears") || 90;
 
-birthInput.value=localStorage.getItem("birthDate")||"";
-yearsInput.value=localStorage.getItem("lifeYears")||90;
+const lifeView = document.getElementById("lifeView");
+const yearView = document.getElementById("yearView");
 
-function weeksBetween(a,b){
- return Math.floor((b-a)/(1000*60*60*24*7));
+// Utility
+function weeksBetween(start, end) {
+  return Math.floor((end - start) / (1000 * 60 * 60 * 24 * 7));
 }
 
-function renderLife(){
- if(!birthInput.value)return;
+// RENDER LIFE
+function renderLife() {
+  const birthVal = birthInput.value;
+  if (!birthVal) {
+    lifeView.innerHTML = "<p class='text-red-600'>Please pick a birth date.</p>";
+    return;
+  }
 
- localStorage.setItem("birthDate",birthInput.value);
- localStorage.setItem("lifeYears",yearsInput.value);
+  localStorage.setItem("birthDate", birthVal);
+  localStorage.setItem("lifeYears", lifeYearsInput.value);
 
- const birth=new Date(birthInput.value);
- const now=new Date();
- const weeksLived=weeksBetween(birth,now);
- const totalWeeks=yearsInput.value*52;
+  const birthDate = new Date(birthVal);
+  const now = new Date();
+  const lifeYears = parseInt(lifeYearsInput.value) || 90;
+  const totalWeeks = lifeYears * 52;
 
- lifeView.innerHTML=`<div class='mb-2'>Weeks lived: ${weeksLived}/${totalWeeks}</div>
- <div class='grid gap-1' style='grid-template-columns:repeat(52,1fr)'></div>`;
+  const livedWeeks = Math.max(0, weeksBetween(birthDate, now));
+  const percentage = ((livedWeeks / totalWeeks) * 100).toFixed(1);
 
- const grid=lifeView.querySelector(".grid");
+  let html = `
+    <div class="text-lg mb-2">
+      You have lived <b>${livedWeeks}</b> of <b>${totalWeeks}</b> weeks
+      (${percentage}%)
+    </div>
+    <div class="grid grid-cols-52 gap-1 justify-center"></div>
+  `;
 
- for(let i=0;i<totalWeeks;i++){
-  const d=document.createElement("div");
-  d.className="aspect-square rounded border cursor-pointer";
-  d.classList.add(i<weeksLived?"bg-gray-800":"bg-gray-200");
+  lifeView.innerHTML = html;
+  const grid = lifeView.querySelector("div.grid");
 
-  const key="week_"+i;
-  if(localStorage.getItem(key)) d.classList.add("ring-2","ring-blue-400");
-
-  d.onclick=()=>{
-   const t=prompt("Note:",localStorage.getItem(key)||"");
-   if(t===null)return;
-   if(t==="")localStorage.removeItem(key); else localStorage.setItem(key,t);
-   renderLife();
-  };
-  grid.appendChild(d);
- }
+  for (let i = 0; i < totalWeeks; i++) {
+    const square = document.createElement("div");
+    square.className = i < livedWeeks ? "bg-gray-800 aspect-square rounded" : "bg-gray-200 aspect-square rounded";
+    grid.appendChild(square);
+  }
 }
 
-function renderYear(){
- const now=new Date();
- const year=now.getFullYear();
- const start=new Date(year,0,1);
+// RENDER YEAR
+function renderYear() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const startOfYear = new Date(year, 0, 1);
 
- yearView.innerHTML=`<div class='mb-2'>${year}</div>
- <div class='grid gap-1' style='grid-template-columns:repeat(31,1fr)'></div>`;
-
- const grid=yearView.querySelector(".grid");
-
- for(let i=0;i<365;i++){
-  const d=new Date(start);
-  d.setDate(start.getDate()+i);
-  if(d.getFullYear()!=year)continue;
-
-  const key="day_"+d.toISOString().slice(0,10);
-
-  const box=document.createElement("div");
-  box.className="aspect-square rounded border cursor-pointer bg-gray-200 text-[8px] flex items-center justify-center";
-  box.innerText=d.getDate();
-
-  if(localStorage.getItem(key)) box.classList.add("ring-2","ring-green-400");
-
-  box.onclick=()=>{
-   const t=prompt(d.toDateString(),localStorage.getItem(key)||"");
-   if(t===null)return;
-   if(t==="")localStorage.removeItem(key); else localStorage.setItem(key,t);
-   renderYear();
-  };
-
-  grid.appendChild(box);
- }
-}
-
-document.getElementById("generate").onclick=()=>{
- renderLife();
- renderYear();
-};
-
-document.getElementById("lifeTab").onclick=()=>{
- lifeView.classList.remove("hidden");
- yearView.classList.add("hidden");
-};
-
-document.getElementById("yearTab").onclick=()=>{
- yearView.classList.remove("hidden");
- lifeView.classList.add("hidden");
-};
-
-renderLife();
-renderYear();
-</script>
-</body>
-</html>
+  const dayOfYear = Math.floor((now - startOfYear) / (1000 * 60 * 60 * 24)) + 1;
+  con
