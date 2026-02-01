@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Life Calendar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-6">
+  <div class="max-w-5xl mx-auto">
+    <h1 class="text-2xl font-semibold mb-2">My Life Calendar</h1>
+    <p class="text-gray-600 mb-6">Your data stays in your browser (localStorage). Nothing is uploaded.</p>
+
+    <div class="bg-white rounded-2xl shadow p-4 mb-6 flex flex-wrap items-end gap-4">
+      <div>
+        <label class="block text-sm text-gray-600">Birth date</label>
+        <input id="birthDate" type="date" class="border rounded px-3 py-2" />
+      </div>
+      <div>
+        <label class="block text-sm text-gray-600">Life expectancy (years)</label>
+        <input id="lifeYears" type="number" value="90" class="border rounded px-3 py-2 w-24" />
+      </div>
+      <button id="generate" class="bg-black text-white rounded-xl px-4 py-2">Generate</button>
+      <button id="clearNotes" class="border rounded-xl px-4 py-2">Clear Notes</button>
+    </div>
+
+    <div id="stats" class="mb-4 text-sm text-gray-700"></div>
+
+    <div class="overflow-x-auto">
+      <div id="grid" class="grid gap-1" style="grid-template-columns: repeat(52, minmax(10px, 1fr));"></div>
+    </div>
+
+    <div class="mt-6 bg-white rounded-2xl shadow p-4">
+      <h2 class="font-medium mb-2">How to use</h2>
+      <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
+        <li>Set your birth date and click Generate.</li>
+        <li>Each square = 1 week.</li>
+        <li>Dark squares = weeks already lived.</li>
+        <li>Click any square to add a note (stored locally).</li>
+      </ul>
+    </div>
+  </div>
+
+<script>
+const gridEl = document.getElementById('grid');
+const birthInput = document.getElementById('birthDate');
+const yearsInput = document.getElementById('lifeYears');
+const statsEl = document.getElementById('stats');
+
+// Load saved settings
+birthInput.value = localStorage.getItem('birthDate') || '';
+yearsInput.value = localStorage.getItem('lifeYears') || 90;
+
+function weeksBetween(a, b) {
+  return Math.floor((b - a) / (1000 * 60 * 60 * 24 * 7));
+}
+
+function render() {
+  const birthVal = birthInput.value;
+  if (!birthVal) return;
+
+  localStorage.setItem('birthDate', birthVal);
+  localStorage.setItem('lifeYears', yearsInput.value);
+
+  const birth = new Date(birthVal);
+  const now = new Date();
+  const lifeYears = parseInt(yearsInput.value || 90);
+
+  const weeksLived = Math.max(0, weeksBetween(birth, now));
+  const totalWeeks = lifeYears * 52;
+
+  statsEl.innerHTML = `Weeks lived: <b>${weeksLived}</b> / ${totalWeeks} (${((weeksLived/totalWeeks)*100).toFixed(1)}%)`;
+
+  gridEl.innerHTML = '';
+
+  for (let i = 0; i < totalWeeks; i++) {
+    const div = document.createElement('div');
+    div.className = 'aspect-square rounded cursor-pointer border';
+
+    const noteKey = `note_${i}`;
+    const hasNote = !!localStorage.getItem(noteKey);
+
+    if (i < weeksLived) {
+      div.classList.add('bg-gray-800');
+    } else {
+      div.classList.add('bg-gray-200');
+    }
+
+    if (hasNote) {
+      div.classList.add('ring-2', 'ring-blue-400');
+    }
+
+    div.title = `Week ${i+1}`;
+
+    div.onclick = () => {
+      const current = localStorage.getItem(noteKey) || '';
+      const text = prompt(`Note for week ${i+1}:`, current);
+      if (text === null) return;
+      if (text.trim() === '') {
+        localStorage.removeItem(noteKey);
+      } else {
+        localStorage.setItem(noteKey, text);
+      }
+      render();
+    };
+
+    gridEl.appendChild(div);
+  }
+}
+
+render();
+
+document.getElementById('generate').onclick = render;
+
+document.getElementById('clearNotes').onclick = () => {
+  if (!confirm('Remove all notes?')) return;
+  Object.keys(localStorage).forEach(k => { if (k.startsWith('note_')) localStorage.removeItem(k); });
+  render();
+};
+</script>
+</body>
+</html>
