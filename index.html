@@ -2,103 +2,156 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Life & Year Calendar</title>
+<title>Life & Year Countdown</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 p-4">
+
+<body class="bg-[#EAEFEF] p-4 text-[#25343F]">
 
 <div class="max-w-4xl mx-auto text-center space-y-4">
 
-  <h1 class="text-3xl font-bold">Life & Year Calendar</h1>
+<h1 class="text-3xl font-bold">Life & Year Countdown</h1>
 
-  <!-- Tab Buttons -->
-  <div class="flex justify-center gap-2">
-    <button id="lifeBtn" class="px-4 py-2 bg-black text-white rounded">Life</button>
-    <button id="yearBtn" class="px-4 py-2 border rounded">Year</button>
-  </div>
+<div class="flex justify-center gap-2">
+  <button id="lifeBtn" class="px-4 py-2 bg-[#25343F] text-white rounded">Life</button>
+  <button id="yearBtn" class="px-4 py-2 border border-[#25343F] rounded text-[#25343F]">Year</button>
+</div>
 
-  <!-- Inputs -->
-  <div class="flex justify-center gap-4">
-    <div>
-      <label class="block text-sm">Birth Date</label>
-      <input id="birthDate" type="date" class="border rounded px-3 py-2">
-    </div>
-    <div>
-      <label class="block text-sm">Life Expectancy (years)</label>
-      <input id="lifeYears" type="number" value="90" class="border rounded px-3 py-2 w-24">
-    </div>
-    <button id="generate" class="bg-blue-600 text-white px-4 py-2 rounded">Generate</button>
+<div class="flex justify-center gap-4">
+  <div>
+    <label class="block text-sm">Birth Date</label>
+    <input id="birthDate" type="date" class="border rounded px-3 py-2">
   </div>
 
-  <!-- Container for Views -->
-  <div id="lifeView" class="">
-    <!-- Life content goes here -->
+  <div>
+    <label class="block text-sm">Life Expectancy</label>
+    <input id="lifeYears" type="number" value="90" class="border rounded px-3 py-2 w-24">
   </div>
-  <div id="yearView" class="hidden">
-    <!-- Year content goes here -->
-  </div>
+
+  <button id="generate" class="bg-[#25343F] text-white px-4 py-2 rounded">Generate</button>
+</div>
+
+<div id="lifeView"></div>
+<div id="yearView" class="hidden"></div>
 
 </div>
 
 <script>
 
-// READ saved birth & life years
-const birthInput = document.getElementById("birthDate");
-const lifeYearsInput = document.getElementById("lifeYears");
-birthInput.value = localStorage.getItem("birthDate") || "";
-lifeYearsInput.value = localStorage.getItem("lifeYears") || 90;
+const birthInput=document.getElementById("birthDate");
+const lifeYearsInput=document.getElementById("lifeYears");
+const lifeView=document.getElementById("lifeView");
+const yearView=document.getElementById("yearView");
 
-const lifeView = document.getElementById("lifeView");
-const yearView = document.getElementById("yearView");
+// load settings
+birthInput.value=localStorage.getItem("birthDate")||"";
+lifeYearsInput.value=localStorage.getItem("lifeYears")||90;
 
-// Utility
-function weeksBetween(start, end) {
-  return Math.floor((end - start) / (1000 * 60 * 60 * 24 * 7));
+function weeksBetween(a,b){
+ return Math.floor((b-a)/(1000*60*60*24*7));
 }
 
-// RENDER LIFE
-function renderLife() {
-  const birthVal = birthInput.value;
-  if (!birthVal) {
-    lifeView.innerHTML = "<p class='text-red-600'>Please pick a birth date.</p>";
-    return;
+// LIFE
+function renderLife(){
+ if(!birthInput.value){
+  lifeView.innerHTML="<p class='text-red-600'>Please select birth date</p>";
+  return;
+ }
+
+ localStorage.setItem("birthDate",birthInput.value);
+ localStorage.setItem("lifeYears",lifeYearsInput.value);
+
+ const birth=new Date(birthInput.value);
+ const now=new Date();
+ const lifeYears=parseInt(lifeYearsInput.value)||90;
+
+ const totalWeeks=lifeYears*52;
+ const lived=weeksBetween(birth,now);
+
+// styled percent
+ const pct=((lived/totalWeeks)*100).toFixed(1);
+
+ lifeView.innerHTML=`<div class='mb-2 font-medium'>
+   Weeks lived: <span class='text-[#25343F]'>${lived}</span> /
+   <span class='text-[#25343F]'>${totalWeeks}</span> (${pct}%)
+ </div>
+ <div class='grid grid-cols-52 gap-0.5 justify-center'></div>`;
+
+ const grid=lifeView.querySelector(".grid");
+
+ for(let i=0;i<totalWeeks;i++){
+  const box=document.createElement("div");
+  box.className = "aspect-square rounded-sm border";
+
+  if(i<lived) {
+    box.classList.add("bg-[#25343F]");
+  } else {
+    box.classList.add("bg-[#BFC9D1]");
   }
-
-  localStorage.setItem("birthDate", birthVal);
-  localStorage.setItem("lifeYears", lifeYearsInput.value);
-
-  const birthDate = new Date(birthVal);
-  const now = new Date();
-  const lifeYears = parseInt(lifeYearsInput.value) || 90;
-  const totalWeeks = lifeYears * 52;
-
-  const livedWeeks = Math.max(0, weeksBetween(birthDate, now));
-  const percentage = ((livedWeeks / totalWeeks) * 100).toFixed(1);
-
-  let html = `
-    <div class="text-lg mb-2">
-      You have lived <b>${livedWeeks}</b> of <b>${totalWeeks}</b> weeks
-      (${percentage}%)
-    </div>
-    <div class="grid grid-cols-52 gap-1 justify-center"></div>
-  `;
-
-  lifeView.innerHTML = html;
-  const grid = lifeView.querySelector("div.grid");
-
-  for (let i = 0; i < totalWeeks; i++) {
-    const square = document.createElement("div");
-    square.className = i < livedWeeks ? "bg-gray-800 aspect-square rounded" : "bg-gray-200 aspect-square rounded";
-    grid.appendChild(square);
-  }
+  grid.appendChild(box);
+ }
 }
 
-// RENDER YEAR
-function renderYear() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const startOfYear = new Date(year, 0, 1);
+// YEAR
+function renderYear(){
+ const now=new Date();
+ const year=now.getFullYear();
+ const start=new Date(year,0,1);
+ const end=new Date(year+1,0,1);
 
-  const dayOfYear = Math.floor((now - startOfYear) / (1000 * 60 * 60 * 24)) + 1;
-  con
+ const totalDays=Math.floor((end-start)/(1000*60*60*24));
+ const dayIndex=Math.floor((now-start)/(1000*60*60*24));
+ const pct=((dayIndex/totalDays)*100).toFixed(1);
+
+ yearView.innerHTML=`
+   <div class='mb-2 font-medium'>
+     Days passed: <span class='text-[#25343F]'>${dayIndex+1}</span> /
+     <span class='text-[#25343F]'>${totalDays}</span> (${pct}%)
+   </div>
+   <div class='grid grid-cols-31 gap-0.5 justify-center'></div>`;
+
+ const grid=yearView.querySelector(".grid");
+
+ for(let i=0;i<totalDays;i++){
+  const box=document.createElement("div");
+  box.className = "aspect-square rounded-sm border";
+
+  if(i<dayIndex){
+    box.classList.add("bg-[#25343F]");
+  } else if (i === dayIndex) {
+    box.classList.add("bg-[#FFF9B5]");
+  } else {
+    box.classList.add("bg-[#BFC9D1]");
+  }
+  grid.appendChild(box);
+ }
+}
+
+// BUTTONS
+document.getElementById("generate").onclick=()=>{
+ renderLife();
+ renderYear();
+};
+
+document.getElementById("lifeBtn").onclick=()=>{
+ lifeView.classList.remove("hidden");
+ yearView.classList.add("hidden");
+ document.getElementById("lifeBtn").className="px-4 py-2 bg-[#25343F] text-white rounded";
+ document.getElementById("yearBtn").className="px-4 py-2 border border-[#25343F] text-[#25343F] rounded";
+};
+
+document.getElementById("yearBtn").onclick=()=>{
+ yearView.classList.remove("hidden");
+ lifeView.classList.add("hidden");
+ document.getElementById("yearBtn").className="px-4 py-2 bg-[#25343F] text-white rounded";
+ document.getElementById("lifeBtn").className="px-4 py-2 border border-[#25343F] text-[#25343F] rounded";
+};
+
+renderLife();
+renderYear();
+
+</script>
+
+</body>
+</html>
