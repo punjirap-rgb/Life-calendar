@@ -1,7 +1,8 @@
 export default function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET");
-  res.setHeader("Access-Control-Allow-Headers", "*");
+
+  const width = Number(req.query.width || 1179);
+  const height = Number(req.query.height || 2556);
 
   const DAYS = 365;
 
@@ -13,6 +14,8 @@ export default function handler(req, res) {
 
   const dayNumber = todayIndex + 1;
   const percent = ((dayNumber / DAYS) * 100).toFixed(1);
+
+  const gridWidth = Math.min(width * 0.8, 340);
 
   let blocks = "";
 
@@ -36,7 +39,7 @@ background:#EAEFEF;
 display:flex;
 justify-content:center;
 align-items:center;
-height:100vh;
+height:${height}px;
 font-family:-apple-system;
 }
 
@@ -49,7 +52,7 @@ font-family:-apple-system;
 display:grid;
 grid-template-columns:repeat(20,1fr);
 gap:4px;
-width:320px;
+width:${gridWidth}px;
 }
 
 .day{aspect-ratio:1;background:#BFC9D1;border-radius:3px}
