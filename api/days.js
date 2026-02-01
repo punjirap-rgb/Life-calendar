@@ -1,10 +1,11 @@
 export default function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
 
-  const width = Number(req.query.width || 1179);
-  const height = Number(req.query.height || 2556);
+  const W = Number(req.query.width || 1179);
+  const H = Number(req.query.height || 2556);
 
   const DAYS = 365;
+  const COLS = 20;
 
   const today = new Date();
   const start = new Date(today.getFullYear(), 0, 1);
@@ -15,7 +16,10 @@ export default function handler(req, res) {
   const dayNumber = todayIndex + 1;
   const percent = ((dayNumber / DAYS) * 100).toFixed(1);
 
-  const gridWidth = Math.min(width * 0.8, 340);
+  // Match lifecal sizing logic
+  const gridWidth = Math.min(W * 0.78, 420);
+  const gap = Math.round(gridWidth / 90);
+  const cell = (gridWidth - gap * (COLS - 1)) / COLS;
 
   let blocks = "";
 
@@ -39,23 +43,40 @@ background:#EAEFEF;
 display:flex;
 justify-content:center;
 align-items:center;
-height:${height}px;
+height:${H}px;
 font-family:-apple-system;
 }
 
-.wrapper{text-align:center}
+.wrapper{
+display:flex;
+flex-direction:column;
+align-items:center;
+}
 
-.counter{font-size:18px;font-weight:600;color:#25343F}
-.percent{font-size:12px;opacity:.6;margin-bottom:10px}
+.counter{
+font-size:${Math.round(W/38)}px;
+font-weight:600;
+color:#25343F;
+}
+
+.percent{
+font-size:${Math.round(W/75)}px;
+opacity:.6;
+margin:4px 0 14px;
+}
 
 .grid{
 display:grid;
-grid-template-columns:repeat(20,1fr);
-gap:4px;
-width:${gridWidth}px;
+grid-template-columns:repeat(${COLS},${cell}px);
+gap:${gap}px;
 }
 
-.day{aspect-ratio:1;background:#BFC9D1;border-radius:3px}
+.day{
+height:${cell}px;
+background:#BFC9D1;
+border-radius:4px;
+}
+
 .past{background:#25343F}
 .today{background:#FF9B51}
 </style>
@@ -64,7 +85,7 @@ width:${gridWidth}px;
 
 <body>
 <div class="wrapper">
-<div class="counter">Day ${dayNumber}/365</div>
+<div class="counter">Day ${dayNumber} / ${DAYS}</div>
 <div class="percent">${percent}% completed</div>
 <div class="grid">${blocks}</div>
 </div>
