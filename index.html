@@ -2,55 +2,124 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
 <title>My Year Calendar</title>
 
 <style>
+:root {
+  --bg: #EAEFEF;
+  --day: #BFC9D1;
+  --past: #25343F;
+  --today: #FF9B51;
+}
+
 body {
   margin: 0;
-  background: #EAEFEF;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background: var(--bg);
   height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
+
+.wrapper {
+  height: 100%;
+  padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Header */
+
+.header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.counter {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--past);
+}
+
+.percent {
+  font-size: 14px;
+  opacity: .6;
+  margin-top: 4px;
+}
+
+/* Calendar grid */
 
 #calendar {
   display: grid;
   grid-template-columns: repeat(20, 1fr);
-  gap: 4px;
-  width: 90vw;
-  max-width: 420px;
+  gap: 6px;
+  width: 100%;
 }
 
 .day {
   aspect-ratio: 1;
-  background: #BFC9D1;
-  border-radius: 3px;
+  background: var(--day);
+  border-radius: 4px;
 }
 
 .past {
-  background: #25343F;
+  background: var(--past);
 }
 
 .today {
-  background: #FF9B51;
+  background: var(--today);
+}
+
+/* iPhone 12 Pro sizing */
+
+@media (min-height: 800px) {
+  #calendar {
+    gap: 7px;
+  }
+
+  .counter {
+    font-size: 30px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<div id="calendar"></div>
+<div class="wrapper">
+
+  <div class="header">
+    <div class="counter" id="counter"></div>
+    <div class="percent" id="percent"></div>
+  </div>
+
+  <div id="calendar"></div>
+
+</div>
 
 <script>
 const DAYS = 365;
 
+// Today index
 const today = new Date();
 const start = new Date(today.getFullYear(), 0, 1);
 const diff = today - start;
 const oneDay = 1000 * 60 * 60 * 24;
 const todayIndex = Math.floor(diff / oneDay);
 
+// Stats
+const dayNumber = todayIndex + 1;
+const percent = ((dayNumber / DAYS) * 100).toFixed(1);
+
+// Header text
+document.getElementById("counter").innerText =
+  `Day ${dayNumber} / ${DAYS}`;
+
+document.getElementById("percent").innerText =
+  `${percent}% of year completed`;
+
+// Build calendar
 const calendar = document.getElementById("calendar");
 
 for (let i = 0; i < DAYS; i++) {
